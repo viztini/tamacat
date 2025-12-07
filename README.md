@@ -6,4 +6,4 @@
 
 ![screenshot3](screenshot3.png)
 
-# first time coding a game, was pretty fun
+## first time coding a game, was pretty fun
