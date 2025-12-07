@@ -1,5 +1,7 @@
 ## my first pico8 game
 
+NOW ON PICOTRON!
+
 ![screenshot1](screenshot1.png)
 
 ![screenshot2](screenshot2.png)
