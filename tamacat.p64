@@ -7,36 +7,44 @@ version 2
 :: main.lua
 --[[pod_format="raw",created="2025-12-08 23:11:17",modified="2025-12-08 23:18:59",revision=8]]
 -- tamacat by viztini
-window(127,127)
+-- hi james if your reading this
+-- hello there
+window{
+width=127,
+height=127,
+background_updates = true
+}
+poke(0x4000, get(fetch("/system/fonts/p8.font")))
+
 
 cat_normal = {
- " /\\_/\\ ",
- "( o.o )",
- " > ^ < "
+" /\\_/\\ ",
+"( o.o )",
+" > ^ < "
 }
 
 cat_happy = {
- " /\\_/\\ ",
- "( o.o )",
- " > u < "
+" /\\_/\\ ",
+"( o.o )",
+" > u < "
 }
 
 cat_tired = {
- " /\\_/\\ ",
- "( -.- )",
- " > ^ < "
+" /\\_/\\ ",
+"( -.- )",
+" > ^ < "
 }
 
 cat_blink = {
- " /\\_/\\ ",
- "( ^.^ )",
- " > ^ < "
+" /\\_/\\ ",
+"( ^.^ )",
+" > ^ < " 
 }
 
 cat_sad = {
- " /\\_/\\ ",
- "( x.x )",
- " > ^ < "
+" /\\_/\\ ",
+"( x.x )",
+" > ^ < "
 }
 
 cat_states = {
@@ -62,30 +70,42 @@ nap_duration = 0
 action_duration = 0 
 
 -- stats
-nutrition=50
-happiness=50
-energy=50
+hunger=50
+happy=50
+tired=0
+mood=50
 
 function _update()
  -- stat decay
  if not is_napping then
-  nutrition-=0.02
-  happiness-=0.015
-  energy-=0.02
+  hunger-=0.02
+  happy-=0.015
+  tired+=0.02
+  
+  -- mood decay
+  if time()%150 == 0 then
+   if hunger<50 or happy<50 then
+    mood-=1
+   else
+    mood-=0.2
+   end
+  end
  else
-  -- restore energy while napping
-  energy+=0.45 
+  -- reduces tired during nap
+  tired-=0.45 
  end
 
  -- clamp stats
- nutrition=mid(0,nutrition,100)
- happiness=mid(0,happiness,100)
- energy=mid(0,energy,100)
+ hunger=mid(0,hunger,100)
+ happy=mid(0,happy,100)
+ tired=mid(0,tired,100)
+ mood=mid(0,mood,100)
 
  -- nap/sleep logic
  if is_napping then
   sleep_timer += 1
-  if sleep_timer >= nap_duration or energy>=100 then
+  -- wake up check
+  if sleep_timer >= nap_duration or tired == 0 then
    is_napping = false
    sleep_timer = 0
    next_state = "normal" 
@@ -95,30 +115,41 @@ function _update()
  end
 
  -- nap trigger
- if energy<30 and not is_napping then
-  nap_duration = rnd(450) + 900
+ if tired > 60 and hunger > 20 and happy > 20 and not is_napping then
+  if rnd(20) < 1 then 
+   -- long nap
+   nap_duration = rnd(3600) + 5400 
+  else
+   -- short nap
+   nap_duration = rnd(450) + 900
+  end
   is_napping = true
  end
  
- -- action triggers
+ -- action state logic
  local action_trigger = false
  
  if btnp(4) then -- z: feed
-  nutrition+=25
-  nutrition=min(nutrition,100)
+  hunger+=25
+  mood+=15 
+  hunger=min(hunger,100)
+  mood=min(mood,100)
   state="happy" 
   action_trigger = true
  end
 
  if btnp(5) then -- x: play
-  happiness+=15
-  energy-=10
-  happiness=min(happiness,100)
-  energy=max(energy,0)
+  happy+=15
+  tired+=15
+  mood+=15 
+  happy=min(happy,100)
+  tired=min(tired,100) 
+  mood=min(mood,100)
   state="happy"
   action_trigger = true
  end
  
+ -- set action duration
  if action_trigger then
   action_duration = rnd(60) + 90 
   next_state = "normal" 
@@ -142,19 +173,32 @@ function _update()
 
  -- passive state logic
  if state~="blink" and state~="happy" and not is_napping then
-  if energy<30 then
+  
+  -- 1. tired state check
+  if tired>70 then
    state="tired"
-  elseif nutrition<40 or happiness<40 or energy<40 then
+  
+  -- 2. sad state check (all important bars < 50)
+  elseif hunger<50 and happy<50 and mood<50 then
    state="sad"
-  elseif happiness>75 then
+  
+  -- 3. highly happy state check (only if happiness is > 75)
+  elseif happy>75 then
    state="happy"
-  else
+  
+  -- 4. general need/mood check
+  elseif mood<25 or hunger<25 or happy<25 then
    state="normal"
+   
+  -- 5. default idle
+  -- are you still here?
+  else
+   state="normal" 
   end
   next_state = state
  end
  
- -- handle temporary 'happy' state
+ -- handle transition from temporary 'happy' state (from button press)
  if state=="happy" and not action_trigger then
   action_duration -= 1 
   if action_duration <= 0 then
@@ -162,50 +206,66 @@ function _update()
     action_duration = 0
   end
  end
+ 
 end
 
 function bar(x,y,val,col)
  local max_inner_width = 28 
  local fill_width = val * max_inner_width / 100
+ 
  rect(x,y,x+30,y+5,1) 
  rectfill(x+1,y+1,x+1+fill_width,y+4,col)
 end
 
 function draw_cat()
  local c=cat_states[state]
+ 
  if state=="blink" then
+  -- if blinking, use the body and mouth from the state we are returning to
   local base_c = cat_states[next_state]
+  
+  -- line 1 (head) from base state
   print(base_c[1], 48, 30+(1*8), 7)
+  -- line 2 (eyes) from blink sprite
   print(cat_blink[2], 48, 30+(2*8), 7)
+  -- line 3 (mouth/feet) from base state
   print(base_c[3], 48, 30+(3*8), 7)
  else
+  -- normal drawing for all other states
   for i=1,#c do
    print(c[i], 48, 30+(i*8), 7)
   end
  end
 end
 
+-- i know this isnt the best code but its just a quick prototype
+
 function _draw()
- cls(0)
- print(" tamacat",45,4,7)
+ cls()
+
+ print("Tamacat",42,4,7)
+
  draw_cat()
  
- -- bars
- print("nutrition",6,74,11)
- bar(6,82,nutrition,8)
+ -- mood bar
+ print("mood",6,94,10) 
+ bar(6,102,mood,10) 
 
- print("happiness",60,74,12)
- bar(60,82,happiness,10)
+ print("hunger",6,74,11)
+ bar(6,82,hunger,8)
 
- print("energy",6,94,9)
- bar(6,102,energy,2)
+ print("happy",91,74,12)
+ bar(91,82,happy,10)
 
- 
- print("made with love",52,102,7)
+ print("tired",90,94,9)
+ bar(91,102,tired,2)
 
  -- controls
  print("z: feed   x: play",22,114,7)
+ 
 end
+-- hi james!
+-- hi leon!
 :: .info.pod
 --[[pod,created="2025-11-13 21:07:43",modified="2025-12-08 23:11:52",runtime=24,workspaces={{location="main.lua#189",workspace_index=1},{location="gfx/0.gfx",workspace_index=2},{location="map/0.map",workspace_index=3},{location="sfx/0.sfx",workspace_index=4}}]]
 :: gfx/.info.pod
