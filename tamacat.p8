@@ -1,4 +1,4 @@
--- amacat by viztini
+-- tamacat by viztini
 
 cat_normal = {
  " /\\_/\\ ",
