@@ -7,8 +7,7 @@ version 2
 :: main.lua
 --[[pod_format="raw",created="2025-12-08 23:11:17",modified="2025-12-08 23:18:59",revision=8]]
 -- tamacat by viztini
--- hi james if your reading this
--- hello there
+
 window{
 width=127,
 height=127,
@@ -264,8 +263,7 @@ function _draw()
  print("z: feed   x: play",22,114,7)
  
 end
--- hi james!
--- hi leon!
+
 :: .info.pod
 --[[pod,created="2025-11-13 21:07:43",modified="2025-12-08 23:11:52",runtime=24,workspaces={{location="main.lua#189",workspace_index=1},{location="gfx/0.gfx",workspace_index=2},{location="map/0.map",workspace_index=3},{location="sfx/0.sfx",workspace_index=4}}]]
 :: gfx/.info.pod
