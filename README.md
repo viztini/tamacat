@@ -4,19 +4,9 @@ NOW ON PICOTRON!
 
 pico8 version
 
-![screenshot1](screenshot1.png)
-
-![screenshot2](screenshot2.png)
-
-![screenshot3](screenshot3.png)
-
-picotron64 version!!
-
-![screenshot4](screenshot4.png)
-
 first time coding a game, was pretty fun
 
-thanks you james for porting it to picotron64 and helping me learn pico8!
+thanks you @Emerald585 for porting it to picotron64 and helping me learn pico8!
 
 # installation
 
