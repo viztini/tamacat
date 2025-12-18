@@ -215,7 +215,7 @@ function _draw()
  print("happiness", 48, 74, 12)
  bar(48, 82, happiness, 10)
 
- print("energy", 90, 74, 9)
+ print("tiredness", 90, 74, 9)
  bar(90, 82, tiredness, 2)
 
  -- controls
